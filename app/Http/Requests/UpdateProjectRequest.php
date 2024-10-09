@@ -27,7 +27,7 @@ class UpdateProjectRequest extends  FormRequest
         return [
             'name' => 'required|max:200',
             'summary' => 'nullable|string',
-            'project_image' => 'nullable|image|max:2048',
+            'project_image' => 'nullable|image|max:4048',
             'category_id' => ['nullable', Rule::exists('categories', 'id')],
         ];
     }

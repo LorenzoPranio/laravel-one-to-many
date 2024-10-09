@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Project;
 use Illuminate\Http\Request;
-use  App\Http\Controllers\Controller;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateProjectRequest;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Category;
+use Illuminate\Support\Str;
+
 
 class ProjectController extends Controller
 {
@@ -28,7 +31,8 @@ class ProjectController extends Controller
      */
     public function create()
     {
-        return view('admin.projects.create');
+        $categories = Category::all();
+        return view('admin.projects.create', compact('categories'));
     }
 
     /**
@@ -76,7 +80,8 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        return view('admin.projects.edit', compact('project'));
+        $categories = Category::all();
+        return view('admin.projects.edit', compact('project', 'categories'));
     }
 
     /**
@@ -89,13 +94,24 @@ class ProjectController extends Controller
     public function update(UpdateProjectRequest $request, Project $project)
     {
         $form_data = $request->validated();
-        
-        $form_data['slug'] = Project::generateSlug($form_data['name'], '-');
 
-        $project->fill($form_data);
-        $project->save();
 
-        return redirect()->route('admin.projects.index')->with('success', 'Project updated successfully');
+        if ($request->hasFile('project_image')) {
+    
+            if (Str::startsWith($project->project_image, 'https') === false) {
+                Storage::disk('public')->delete($project->project_image);
+            }
+    
+    
+            $path = Storage::disk('public')->put('project_image', $form_data['project_image']);
+            $form_data['project_image'] = $path;
+        }
+    
+        $form_data['slug'] = Project::generateSlug($form_data['name']);
+    
+        $project->update($form_data);
+    
+        return redirect()->route('admin.projects.index');
     }
 
     /**
